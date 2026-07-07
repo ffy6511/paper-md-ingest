@@ -324,6 +324,9 @@ def write_notes(path, record, final_source):
     summary = record.get("summary") or []
     if isinstance(summary, str):
         summary = [summary]
+    summary = list(summary or labels["summary_fallback"])
+    if summary:
+        summary[-1] = ensure_summary_block_id(summary[-1])
     notes = record.get("notes") or {}
     if not isinstance(notes, dict):
         notes = {}
@@ -363,7 +366,7 @@ def write_notes(path, record, final_source):
         f"## {labels['three_sentence_summary']}",
         "",
     ])
-    body.extend(summary or labels["summary_fallback"])
+    body.extend(summary)
     body.extend([
         "",
         f"## {labels['positioning']}",
@@ -412,6 +415,11 @@ def safe_note_filename(value):
     if path.suffix != ".md":
         raise ValueError(f"note_filename must use .md: {filename}")
     return path.name
+
+
+def ensure_summary_block_id(line):
+    text = re.sub(r"\s\^[A-Za-z0-9-]+$", "", str(line).rstrip())
+    return f"{text} ^summary"
 
 
 def reading_note_path(paper_dir, record):

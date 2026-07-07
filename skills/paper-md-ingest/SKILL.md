@@ -54,11 +54,10 @@ Treat the non-`paper.md` reading note under `library/<paper-id>/` as the canonic
 Use Obsidian Flavored Markdown in project maps:
 
 ```markdown
-- [[papers/library/<paper-id>/<reading-note>|<short human title>]]
-![[papers/library/<paper-id>/<reading-note>#<summary-heading>]]
+- [[papers/library/<paper-id>/<reading-note>|<short human title>]] - <one-line reason>![[papers/library/<paper-id>/<reading-note>#^summary]]
 ```
 
-Use wikilink aliases for readable titles. Use embeds for concise paper summaries. Rely on backlinks so a paper note can reveal which projects, research questions, or design decisions cite it. Use the actual summary heading present in the note, which depends on the user's working language. Do not copy `paper.md` or duplicate long single-paper analysis into project maps.
+Use wikilink aliases for readable titles. Use inline block embeds for concise paper summaries directly on the same bullet as the paper link. In `主题聚合`, every paper bullet must include `![[...#^summary]]`; summary embeds are not optional there. Rely on backlinks so a paper note can reveal which projects, research questions, or decisions cite it. Prefer the stable summary block id `^summary` instead of embedding the whole summary heading section; the file path already identifies the paper, so paper-specific block ids are unnecessary. Do not copy `paper.md` or duplicate long single-paper analysis into project maps.
 
 ## Script
 
@@ -151,7 +150,7 @@ The body must use the user's working language, inferred from the request and man
 
 这篇论文解决的问题是：...
 它使用的方法是：...
-主要效果或发现是：...
+主要效果或发现是：... ^summary
 
 ## 论文定位
 
@@ -184,7 +183,7 @@ The body must use the user's working language, inferred from the request and man
 这篇论文能给当前项目提供什么设计、方法、checklist、反例或风险提示？
 ```
 
-Keep the three-sentence summary section short and stable because project maps embed it via Obsidian double links. Use the expanded sections for single-paper reading and future agent handoff. If the paper has not been deeply read yet, write a conservative initial note and mark uncertain details in the user's working language rather than overclaiming.
+Keep the three-sentence summary section short and stable. End the last summary line with the fixed block id `^summary` so project maps can embed only the summary content via `![[...#^summary]]`. Use the expanded sections for single-paper reading and future agent handoff. If the paper has not been deeply read yet, write a conservative initial note and mark uncertain details in the user's working language rather than overclaiming.
 
 ## Project Map Requirements
 
@@ -193,25 +192,23 @@ When a batch is tied to a project, create or update `projects/<project>.md`. Pro
 Use Obsidian double links to the canonical notes:
 
 ```markdown
-- [[papers/library/<paper-id>/<reading-note>|<short human title>]]
-![[papers/library/<paper-id>/<reading-note>#<summary-heading>]]
+- [[papers/library/<paper-id>/<reading-note>|<short human title>]] - <one-line reason>![[papers/library/<paper-id>/<reading-note>#^summary]]
 ```
 
-Use the actual summary heading from the reading note, such as `三句话摘要` for Chinese notes or `Three-Sentence Summary` for English notes. See `references/obsidian.md` for Obsidian wikilink and embed syntax.
+Use the fixed `^summary` block id from the reading note. Keep the paper title, one-line reason, and embedded summary on the same bullet. See `references/obsidian.md` for Obsidian wikilink and embed syntax.
 
 Required content:
 
 - A project title and short project goal.
-- A core reading path with ordered double links and one-line reasons.
-- Project-specific groupings by problem, module, decision, or reading stage.
+- A `主题聚合` section with project-specific groupings by problem, module, decision, or reading stage; every paper listed there must include an inline `![[...#^summary]]` block embed on the same bullet.
+- A `推荐阅读路径` section after `主题聚合`, with ordered double links and one-line reasons.
 - Obsidian double links to every referenced paper note.
 
 Strongly recommended content:
 
 - Lightweight frontmatter with `type: note`, `status`, `visibility`, and `literature-map` tags.
 - A search framing section when papers were discovered from a topic or project goal.
-- Embedded summaries for the most important papers using `![[...#<summary-heading>]]`.
-- A project design notes section for decisions, open questions, and follow-up paper gaps.
+- A `阅读关注点` section only when useful, for what to inspect during close reading, open questions, or follow-up paper gaps. Do not add a generic `设计笔记` section by default.
 
 Do not duplicate `paper.md` or reading notes in project folders. Keep long single-paper analysis in `library/<paper-id>/<reading-note>.md`; keep project maps focused on navigation, synthesis, and project relevance.
 

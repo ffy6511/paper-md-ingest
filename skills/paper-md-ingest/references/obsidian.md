@@ -32,16 +32,17 @@ Use ordinary Markdown links only for external URLs:
 Prefix a wikilink with `!` to embed note content inline:
 
 ```markdown
-![[papers/library/<paper-id>/<reading-note>#<summary-heading>]]
+![[papers/library/<paper-id>/<reading-note>#^summary]]
 ```
 
-Embed only compact sections in project maps. The normal target is the summary section of the reading note.
+Embed only compact sections in project maps. The normal target is the summary block of the reading note.
 
-Use the actual heading language in the paper note:
+Use a fixed `^summary` block id at the end of the last sentence in the summary section. The project map already includes the file path and paper title, so paper-specific block ids are unnecessary.
 
 ```markdown
-![[papers/library/2507.02825/Best Practices for Agentic Benchmarks#三句话摘要]]
-![[papers/library/2507.02825/Best Practices for Agentic Benchmarks#Three-Sentence Summary]]
+主要效果或发现是：... ^summary
+
+- [[papers/library/2507.02825/Best Practices for Agentic Benchmarks|Agentic Benchmark Checklist]] - Use this first to define evaluation rigor![[papers/library/2507.02825/Best Practices for Agentic Benchmarks#^summary]]
 ```
 
 Do not embed full `paper.md` into a project map.
@@ -85,10 +86,10 @@ Project maps are reading maps, not duplicate paper notes. They should contain:
 
 - project goal
 - search framing when papers were discovered from a topic
-- core reading path with ordered wikilinks
-- paper groups by problem, module, design decision, or reading stage
-- embeds for the most important paper summaries
-- project design notes, open questions, and follow-up paper gaps
+- `主题聚合`: paper groups by problem, module, decision, or reading stage
+- `推荐阅读路径`: ordered wikilinks with one-line reasons, placed after `主题聚合`
+- inline block embeds for every paper listed under `主题聚合`
+- `阅读关注点` only when useful, for close-reading cues, open questions, or follow-up paper gaps
 
 Example:
 
@@ -99,21 +100,20 @@ Example:
 
 ...
 
-## Core Reading Path
+## 主题聚合
 
-1. [[papers/library/2507.02825/Best Practices for Agentic Benchmarks|Agentic Benchmark Checklist]] — Use this first to define evaluation rigor.
-2. [[papers/library/2408.04682/ToolSandbox|ToolSandbox]] — Read next for stateful sandbox design.
+### Evaluation Rigor
 
-## Key Summaries
+- [[papers/library/2507.02825/Best Practices for Agentic Benchmarks|Agentic Benchmark Checklist]] - Use this first to define evaluation rigor![[papers/library/2507.02825/Best Practices for Agentic Benchmarks#^summary]]
 
-![[papers/library/2507.02825/Best Practices for Agentic Benchmarks#三句话摘要]]
-![[papers/library/2408.04682/ToolSandbox#三句话摘要]]
-```
+### Stateful Sandboxes
 
-If the project map is written in English, use the English heading used in the note:
+- [[papers/library/2408.04682/ToolSandbox|ToolSandbox]] - Read next for stateful sandbox design![[papers/library/2408.04682/ToolSandbox#^summary]]
 
-```markdown
-![[papers/library/2507.02825/Best Practices for Agentic Benchmarks#Three-Sentence Summary]]
+## 推荐阅读路径
+
+1. [[papers/library/2507.02825/Best Practices for Agentic Benchmarks|Agentic Benchmark Checklist]] - Use this first to define evaluation rigor.
+2. [[papers/library/2408.04682/ToolSandbox|ToolSandbox]] - Read next for stateful sandbox design.
 ```
 
 ## Backlinks
