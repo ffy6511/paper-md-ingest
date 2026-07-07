@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper MD Ingest"
+  short_description: "Build an Obsidian-friendly literature workspace from research papers"
+  default_prompt: "Use $paper-md-ingest to add these papers to the Obsidian papers workspace as paper.md, reading notes, and project-map wikilinks."
