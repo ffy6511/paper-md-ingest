@@ -56,13 +56,13 @@ For a new or immature workspace, the skill includes `references/workspace.md` wi
 
 Each paper lives under `papers/library/<paper-id>/` with a `paper.md` file for agent reading and git diff. Compared with handing an agent raw HTML, LaTeX source, or PDF content, cleaned Markdown is more stable and easier to preview, search, and fold in Obsidian.
 
-![Paper converted into Markdown and viewed in Obsidian](assets/paper-in-md.png)
+![Paper converted into Markdown and viewed in Obsidian](assets/paper-in-md.jpg)
 
 ### Organize related papers with project maps
 
 Project-level entry points live under `papers/projects/<project>.md`. A project map does not duplicate single-paper notes; it connects them with Obsidian wikilinks. Reading paths, groups, design notes, and key summaries can all live in one project map. The backlinks pane also shows which papers or sections the current project references.
 
-![Project map with wikilinks and backlinks](assets/project-link.png)
+![Project map with wikilinks and backlinks](assets/project-link.jpg)
 
 ### See paper-project relationships in the graph
 

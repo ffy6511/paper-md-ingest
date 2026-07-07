@@ -56,13 +56,13 @@ papers/
 
 每篇论文会放在 `papers/library/<paper-id>/` 下，保留一份供 agent 阅读和 diff 的 `paper.md`。相比直接把 HTML、LaTeX source 或 PDF 扔给 agent，清洗后的 Markdown 更稳定，也更容易被 Obsidian 预览、搜索和折叠阅读。
 
-![论文转换为 Markdown 后在 Obsidian 中阅读](assets/paper-in-md.png)
+![论文转换为 Markdown 后在 Obsidian 中阅读](assets/paper-in-md.jpg)
 
 ### 用项目地图组织一组相关论文
 
 项目级入口放在 `papers/projects/<project>.md`。它不是复制单篇论文笔记，而是用 Obsidian 双链把相关论文串起来：阅读路径、分组、设计提示和关键摘要都聚合在一个 project map 中。右侧 backlinks 也能反过来显示当前项目引用了哪些论文或章节。
 
-![项目地图中的双链和 backlinks](assets/project-link.png)
+![项目地图中的双链和 backlinks](assets/project-link.jpg)
 
 ### 在关系图谱中看到论文和项目的连接
 
