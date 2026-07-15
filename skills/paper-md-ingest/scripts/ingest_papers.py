@@ -74,6 +74,24 @@ def md_escape_alt(text):
     return text.replace("[", "(").replace("]", ")").replace("\n", " ")[:140]
 
 
+def normalize_note_figures(record):
+    figures = record.get("figures") or []
+    if not isinstance(figures, list):
+        raise ValueError("figures must be a list when provided")
+    normalized = []
+    for index, figure in enumerate(figures, start=1):
+        if not isinstance(figure, dict):
+            raise ValueError(f"figures[{index}] must be an object")
+        url = str(figure.get("url", "")).strip()
+        if not url.startswith("https://") or url.startswith("https://data:"):
+            raise ValueError(f"figures[{index}].url must be a public https URL")
+        alt = " ".join(str(figure.get("alt", "")).split()) or f"Figure {index}"
+        caption = " ".join(str(figure.get("caption", "")).split())
+        takeaway = " ".join(str(figure.get("takeaway", "")).split())
+        normalized.append({"url": url, "alt": alt, "caption": caption, "takeaway": takeaway})
+    return normalized
+
+
 def convert_html_to_markdown(data, page_url):
     if lxml_html is None:
         raise RuntimeError("lxml is required for HTML conversion; use a Python runtime with lxml installed.")
@@ -269,6 +287,7 @@ NOTE_LABELS = {
         "positioning": "论文定位",
         "background": "问题背景",
         "method": "核心方法",
+        "key_figures": "关键图示",
         "contributions": "主要贡献",
         "results": "实验与结果",
         "limitations": "局限与边界",
@@ -288,6 +307,7 @@ NOTE_LABELS = {
         "positioning": "Paper Positioning",
         "background": "Problem Background",
         "method": "Core Method",
+        "key_figures": "Key Figures",
         "contributions": "Main Contributions",
         "results": "Experiments and Results",
         "limitations": "Limitations and Boundaries",
@@ -335,6 +355,7 @@ def write_notes(path, record, final_source):
         contributions = [contributions]
     if not contributions:
         contributions = ["TODO"]
+    figures = normalize_note_figures(record)
 
     def note_text(key, default="TODO"):
         value = notes.get(key, "")
@@ -380,7 +401,19 @@ def write_notes(path, record, final_source):
         f"## {labels['method']}",
         "",
         note_text("method"),
-        "",
+    ])
+    if figures:
+        body.extend(["", f"## {labels['key_figures']}", ""])
+        for figure in figures:
+            body.extend([
+                f"![{md_escape_alt(figure['alt'])}]({figure['url']})",
+                "",
+            ])
+            if figure["caption"]:
+                body.extend([figure["caption"], ""])
+            if figure["takeaway"]:
+                body.extend([figure["takeaway"], ""])
+    body.extend([
         f"## {labels['contributions']}",
         "",
     ])
@@ -451,14 +484,20 @@ def ingest_one(record, library_root):
             record["year"] = meta["year"]
         record["id"] = strip_version(record.get("id") or arxiv_id)
         versioned = meta.get("versioned_id") or arxiv_id
-        html_candidates = [f"https://arxiv.org/html/{versioned}", f"https://arxiv.org/html/{strip_version(arxiv_id)}"]
-        for html_url in html_candidates:
+        html_candidates = [
+            (f"https://arxiv.org/html/{versioned}", None),
+            (f"https://arxiv.org/html/{strip_version(arxiv_id)}", None),
+            # Older arXiv submissions may not have first-party HTML. This mirror
+            # is only a rendering fallback; the canonical note still points at arXiv.
+            (f"https://ar5iv.labs.arxiv.org/html/{strip_version(arxiv_id)}", meta.get("abs_url")),
+        ]
+        for html_url, canonical_source in html_candidates:
             result = maybe_fetch(html_url)
-            if result["ok"] and b"DOCTYPE html" in result["data"][:500].upper() or result["ok"]:
+            if result["ok"]:
                 try:
                     md = convert_html_to_markdown(result["data"], result["url"])
                     if len(md) > 2000:
-                        final_source = result["url"]
+                        final_source = canonical_source or result["url"]
                         break
                 except Exception:
                     md = ""

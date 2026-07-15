@@ -1,6 +1,6 @@
 # Obsidian Literature Notes
 
-Use this reference when creating or updating `papers/projects/*.md`, writing Obsidian links to paper notes, or deciding how a paper reading-note `.md` file should be referenced from project maps.
+Use this reference when creating or updating `papers/projects/*.md` or `papers/topics/*.md`, writing Obsidian links to paper notes, or deciding how a paper reading-note `.md` file should be referenced from a map or index.
 
 This workspace treats Obsidian features as part of the literature workflow, not as decoration. Use wikilinks to express relationships, embeds to surface short summaries, and backlinks to let a paper reveal which projects cite it.
 
@@ -74,6 +74,23 @@ tags:
 
 `source` should point to the best official human-readable source, usually arXiv HTML when available. This makes it easy to open the original source for browser annotation and close reading.
 
+## Key Figure Pattern
+
+`paper.md` keeps the full converted text and any usable public HTML figure links. The canonical reading note should promote only the one to three figures that make its explanation easier to follow; it is not a gallery or a second copy of the paper.
+
+Place selected figures after `## 核心方法` / `## Core Method` and before contributions:
+
+```markdown
+## 关键图示
+
+![图 2：失败模式到 harness 适配的映射](https://arxiv.org/html/<paper-id>v1/x2.png)
+
+图 2：作者把轨迹中的能力缺口连到 context、tool、agent-loop 三类改造。
+阅读提示：先按“失败信号 → 适配层 → 可测结果”核对这张图与正文是否一致。
+```
+
+Use a direct public `https://` image URL from official HTML whenever possible. If an older paper has no official HTML, a stable public HTML rendering mirror is acceptable only when its image response has been checked and the caption identifies it as a mirror. Do not use base64/data URLs, local paths, screenshots, logos, search thumbnails, or decorative images. Keep the original figure number/caption and add one sentence that tells the reader why the figure belongs in the note. If no figure is both available and explanatory, omit this section.
+
 ## Project Map Pattern
 
 Each project map lives under:
@@ -85,6 +102,7 @@ papers/projects/<project>.md
 Project maps are reading maps, not duplicate paper notes. They should contain:
 
 - project goal
+- paired roadmap canvas embedded near the top
 - search framing when papers were discovered from a topic
 - `主题聚合`: paper groups by problem, module, decision, or reading stage
 - `推荐阅读路径`: ordered wikilinks with one-line reasons, placed after `主题聚合`
@@ -99,6 +117,10 @@ Example:
 ## Project Goal
 
 ...
+
+## Roadmap
+
+![[papers/projects/<project> roadmap.canvas]]
 
 ## 主题聚合
 
@@ -116,16 +138,50 @@ Example:
 2. [[papers/library/2408.04682/ToolSandbox|ToolSandbox]] - Read next for stateful sandbox design.
 ```
 
+## Project Roadmap Canvas
+
+Create one paired `.canvas` roadmap for each project map:
+
+```text
+papers/projects/<project> roadmap.canvas
+```
+
+Use this visual convention:
+
+- Center spine: orange `#f6a800` nodes for the `主题聚合` themes, not individual papers.
+- Side branches: blue `#b9dcff` nodes for concrete papers, linked with vault-relative wikilinks to canonical reading notes.
+- Branch lines: blue `#2f7de1`.
+- Third level: every paper node should have a one-sentence project-role explanation node, pale blue `#eaf4ff`.
+- Explanation edges: connect paper nodes to explanation nodes with gray `#9ca3af`, no arrow (`toEnd: "none"`), and horizontal center alignment.
+- Neutral top blocks: project goal, reading instructions, or scope notes.
+- Node width: keep text legible. Increase width for long Chinese or mixed Chinese/English labels; do not leave clipped text.
+
 ## Backlinks
 
 Backlinks are the reason to prefer wikilinks over plain Markdown links for internal notes. When a project map links to a paper note, Obsidian can show that project in the paper note's backlinks.
 
 This matters because one paper may support multiple projects or research questions. Do not force this relationship into directory structure by copying paper notes into project folders.
 
+## Topic Index Pattern
+
+Use `papers/topics/<topic>.md` for a stable grouping that does not belong to one project, such as classics, a method family, or a benchmark category. A topic index is a navigation and curation surface, not a second library or a disguised project map.
+
+Topic indexes should include:
+
+- lightweight `topic-index` frontmatter;
+- a concise statement of the shared concept and the selection boundary;
+- canonical note wikilinks grouped by concept or reading dependency;
+- optional inline `![[...#^summary]]` embeds for fast recall;
+- a short reading path when order matters.
+
+Do not create a roadmap canvas for a topic index, duplicate `paper.md`, or use ordinary Markdown links for canonical notes.
+
 ## Do Not
 
 - Do not copy `paper.md` into project folders.
 - Do not use ordinary Markdown links for internal paper notes.
 - Do not embed long sections or full paper bodies in project maps.
+- Do not create a project map just to hold a project-independent topic index.
+- Do not turn a canonical note into a figure dump; include only figures that explain a method, protocol, or result, and retain their public source URL.
 - Do not hard-code one language for headings; use the user's working language and link to the actual heading present in the note.
 - Do not rename a note without updating every wikilink, embed, and `PAPERS.md` entry, then running `scripts/validate_papers_workspace.py`.

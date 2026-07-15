@@ -4,7 +4,9 @@
 import argparse
 import re
 import sys
+import urllib.error
 import urllib.parse
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,6 +14,7 @@ from pathlib import Path
 FENCE_RE = re.compile(r"(^|\n)```.*?(\n```|$)", re.S)
 WIKILINK_RE = re.compile(r"(!?)\[\[([^\]\n]+)\]\]")
 MD_LINK_RE = re.compile(r"(?<!!)\[[^\]\n]*\]\(([^)\n]+)\)")
+MD_IMAGE_RE = re.compile(r"!\[[^\]\n]*\]\(([^)\n]+)\)")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.M)
 FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 
@@ -166,6 +169,27 @@ def check_markdown_links(path, text, vault_root, papers_root, stem_index, issues
             check_fragment(resolved, fragment, path, issues)
 
 
+def check_markdown_images(path, text, check_remote_images, image_cache, issues):
+    body = strip_fenced_code(text)
+    for match in MD_IMAGE_RE.finditer(body):
+        raw_target = md_link_target(match.group(1))
+        if not raw_target.startswith("https://"):
+            issues.append(Issue("error", path, f"reading-note image must use a public https URL: {raw_target}"))
+            continue
+        if not check_remote_images or raw_target in image_cache:
+            continue
+        try:
+            request = urllib.request.Request(raw_target, headers={"User-Agent": "paper-md-ingest-validator/0.1"})
+            with urllib.request.urlopen(request, timeout=20) as response:
+                content_type = response.headers.get("content-type", "").lower()
+                response.read(1)
+            image_cache[raw_target] = content_type
+            if not content_type.startswith("image/"):
+                issues.append(Issue("error", path, f"remote image is not image/* ({content_type or 'missing content type'}): {raw_target}"))
+        except (urllib.error.URLError, TimeoutError, ValueError) as error:
+            issues.append(Issue("error", path, f"remote image check failed: {raw_target} ({error})"))
+
+
 def check_wikilinks(path, text, vault_root, papers_root, stem_index, issues):
     body = strip_fenced_code(text)
     for match in WIKILINK_RE.finditer(body):
@@ -217,12 +241,13 @@ def check_inventory(papers_root, issues):
             issues.append(Issue("error", papers_md, f"library item not indexed: {paper_dir.name}"))
 
 
-def validate(papers_root):
+def validate(papers_root, check_remote_images=False):
     papers_root = papers_root.resolve()
     vault_root = papers_root.parent
     issues = []
     markdown_files = sorted(p.resolve() for p in papers_root.rglob("*.md"))
     stem_index = build_stem_index(markdown_files)
+    image_cache = {}
 
     check_library(papers_root, issues)
     check_inventory(papers_root, issues)
@@ -231,6 +256,7 @@ def validate(papers_root):
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
         check_markdown_links(path, text, vault_root, papers_root, stem_index, issues)
+        check_markdown_images(path, text, check_remote_images, image_cache, issues)
         check_wikilinks(path, text, vault_root, papers_root, stem_index, issues)
     return issues
 
@@ -238,10 +264,11 @@ def validate(papers_root):
 def main():
     parser = argparse.ArgumentParser(description="Validate papers workspace links and required files.")
     parser.add_argument("--papers-root", default="papers", help="Path to the papers workspace")
+    parser.add_argument("--check-remote-images", action="store_true", help="Fetch reading-note images and require image/* responses")
     args = parser.parse_args()
 
     papers_root = Path(args.papers_root)
-    issues = validate(papers_root)
+    issues = validate(papers_root, check_remote_images=args.check_remote_images)
     errors = [issue for issue in issues if issue.severity == "error"]
     for issue in issues:
         print(f"{issue.severity.upper()}: {issue.path}: {issue.message}", file=sys.stderr)

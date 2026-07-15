@@ -10,6 +10,7 @@ Paper MD Ingest 是一个默认面向 Obsidian 的 agent skill，用来把论文
 - 初始化带 source 链接的结构化阅读笔记
 - 维护轻量的 `PAPERS.md` 全局清单
 - 用 Obsidian 双链、嵌入和 backlink 维护项目级阅读地图
+- 用 `topics/` 维护与特定项目无关的长期聚合索引
 - 校验 Markdown 链接、Obsidian 双链、嵌入 heading 和论文目录结构
 
 ## 安装
@@ -46,9 +47,12 @@ papers/
       <reading-note>.md
   projects/
     <project>.md
+    <project> roadmap.canvas
+  topics/
+    <topic>.md
 ```
 
-如果工作区还没有成型，skill 内置的 `references/workspace.md` 提供了 `AGENTS.md`、`PAPERS.md` 和项目地图的初始化参考。
+如果工作区还没有成型，skill 内置的 `references/workspace.md` 提供了 `AGENTS.md`、`PAPERS.md`、项目地图和主题索引的初始化参考。
 
 ## 效果示例
 
@@ -63,6 +67,10 @@ papers/
 项目级入口放在 `papers/projects/<project>.md`。它不是复制单篇论文笔记，而是用 Obsidian 双链把相关论文串起来：阅读路径、分组、设计提示和关键摘要都聚合在一个 project map 中。右侧 backlinks 也能反过来显示当前项目引用了哪些论文或章节。
 
 ![项目地图中的双链和 backlinks](assets/project-link.jpg)
+
+### 用主题索引串起跨项目经典论文
+
+`papers/topics/<topic>.md` 用于不隶属于单一项目的长期阅读路径，例如经典论文、方法族或 benchmark 类别。它只链接 `library/` 的 canonical note，并可嵌入简短摘要；不复制论文，也不创建 roadmap canvas。
 
 ### 在关系图谱中看到论文和项目的连接
 
