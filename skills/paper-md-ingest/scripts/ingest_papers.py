@@ -350,6 +350,7 @@ def write_notes(path, record, final_source):
     notes = record.get("notes") or {}
     if not isinstance(notes, dict):
         notes = {}
+    relevance = str(record.get("relevance") or "").strip()
     contributions = notes.get("contributions") or record.get("contributions") or []
     if isinstance(contributions, str):
         contributions = [contributions]
@@ -427,12 +428,15 @@ def write_notes(path, record, final_source):
         f"## {labels['limitations']}",
         "",
         note_text("limitations"),
-        "",
-        f"## {labels['relevance']}",
-        "",
-        record.get("relevance", "TODO"),
-        "",
     ])
+    if relevance:
+        body.extend([
+            "",
+            f"## {labels['relevance']}",
+            "",
+            relevance,
+        ])
+    body.append("")
     path.write_text("\n".join(body), encoding="utf-8")
 
 

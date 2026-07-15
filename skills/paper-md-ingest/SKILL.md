@@ -17,14 +17,14 @@ This skill assumes Obsidian by default. Use wikilinks, aliases, embeds, backlink
 2. If the user gives paper ids, titles, or official URLs, resolve each paper directly.
 3. If the user only gives a topic, project goal, or research direction, first ask concise follow-up questions until the scope is clear enough to search. If the user already provided a concrete goal, infer reasonable search axes and proceed.
 4. For topic-based discovery, search arXiv first. Unless the user specifies a count, curate 5-10 papers. Prefer a balanced set that covers core benchmarks, infrastructure/framework papers, methodology/survey papers, and project-specific risks.
-5. Convert the selected papers into a manifest with concise summaries and project relevance in the user's working language before ingesting.
+5. Convert the selected papers into a manifest with concise summaries in the user's working language before ingesting. Add project relevance only when the user explicitly supplies a project or the paper's project ownership is already clear from the request.
 6. Prefer official arXiv HTML. Convert it to `paper.md` and retain figure images as remote Markdown links. If a legacy paper has no official HTML, a public HTML rendering mirror may supply figures, but the canonical note source remains the official arXiv/PDF URL.
 7. If HTML is unavailable, use arXiv source and convert the TeX tree to `paper.md`.
 8. If source is unavailable, extract text from the official PDF into `paper.md`.
 9. Create or update one reading-note `.md` file under `library/<paper-id>/` in the user's working language as the canonical Obsidian note for the paper. `NOTES.md` is the default; a short title filename is allowed when it improves human navigation. When `paper.md` exposes usable HTML figures, select the one to three that explain the paper's mechanism, protocol, or main result and add them to the note with a concise reading cue; omit decorative or redundant figures.
 10. Add a `source` field in the reading note frontmatter pointing to the best human-readable official source, usually arXiv HTML or official PDF.
 11. Update `PAPERS.md` manually after batch generation.
-12. If the paper belongs to an active project, update the relevant `projects/<project>.md` map with Obsidian wikilinks and summary embeds; then create or update its paired roadmap canvas.
+12. Update `projects/<project>.md` only when the request explicitly identifies that active project or establishes unambiguous project ownership. A radar action alone does not establish project ownership. When no project is named, keep the canonical note project-neutral and use an existing topic index only when the grouping is genuinely long-lived.
 13. If the paper belongs in a project-independent long-term grouping, create or update the relevant `topics/<topic>.md` index instead of inventing a project map.
 14. Run `scripts/validate_papers_workspace.py` and fix every broken Markdown link, Obsidian wikilink/embed, missing heading target, missing `paper.md`, missing reading note, and missing `id/source` frontmatter field. For roadmap canvas edits, also validate that the `.canvas` file is parseable JSON and every edge references an existing node.
 
@@ -54,6 +54,10 @@ For new or partially formed workspaces, use `references/workspace.md` as the ini
 Before creating or updating project maps, topic indexes, reading-note figures, or when unsure about wikilinks, embeds, aliases, heading links, frontmatter, or backlinks, read `references/obsidian.md`. Before converting HTML or choosing figures, read `references/conversion.md`.
 
 Treat the non-`paper.md` reading note under `library/<paper-id>/` as the canonical Obsidian note for a paper. Treat `projects/<project>.md` as the human and agent reading entry for a project; treat `topics/<topic>.md` as a cross-project navigation index, not a second paper store or a project map.
+
+### Project association gate
+
+`## 与当前项目的关系` / `## Relationship to Current Project`, the manifest `relevance` field, and a project-map update are all optional. Add them only when the request names a project, or when an existing project map is the paper's clearly established owner. Do not infer a project from the paper's topic, tags, or a `knowledge-radar-actions` receipt. When the condition is absent, omit the section entirely; backlinks and a topic index already provide discovery without inventing a project relationship.
 
 Use Obsidian Flavored Markdown in project maps:
 
@@ -127,7 +131,7 @@ Manifest schema:
       "results": "实验与结果：...",
       "limitations": "局限与边界：..."
     },
-    "relevance": "与 Critic Agent 的关系：..."
+    "relevance": "可选：仅在请求明确指定项目时，写该论文与项目的关系。"
   }
 ]
 ```
@@ -198,14 +202,26 @@ The body must use the user's working language, inferred from the request and man
 
 哪些场景没有覆盖？关键假设是什么？可能有什么偏差、风险或后续待验证点？
 
-## 与当前项目的关系
-
-这篇论文能给当前项目提供什么设计、方法、checklist、反例或风险提示？
 ```
+
+`## 与当前项目的关系` 是可选章节。只有 manifest 提供非空 `relevance`，且该关系来自请求中指定的项目时才写入；没有项目上下文时不要留下空标题、`TODO` 或泛泛的关联判断。
 
 Keep the three-sentence summary section short and stable. End the last summary line with the fixed block id `^summary` so project maps can embed only the summary content via `![[...#^summary]]`. Use the expanded sections for single-paper reading and future agent handoff. If the paper has not been deeply read yet, write a conservative initial note and mark uncertain details in the user's working language rather than overclaiming.
 
-For mature reading notes, the `## 核心方法` / `## Core Method` section is the most important handoff surface. Do not leave it as a flat one-paragraph summary when the paper's value lies in a concrete benchmark construction, execution protocol, system architecture, safety pipeline, contamination check, or evaluator design. Preserve the standard top-level section structure, but use method subheadings liberally inside this section.
+### Core Method: blocking completeness requirement
+
+`## 核心方法` / `## Core Method` is the main handoff surface. A one-sentence description, a list of component names, or a restatement of the abstract is incomplete and must not be handed off as a reading note.
+
+Read the paper's method sections in `paper.md` before drafting this section. Start with one short end-to-end overview, then use `###` subheadings to make the mechanism executable in the reader's head. Each relevant subheading must state the concrete input or state, transformation steps, output or state change, and the signal that controls, validates, or terminates the step. Preserve original notation, equations, schemas, action names, and thresholds when they carry the mechanism; explain them in the user's working language instead of replacing them with generic prose.
+
+Cover the applicable items below. Omit only items the paper truly does not define, and say what remains unspecified when that absence matters:
+
+- **System / agent**: components, their visible state, data and control flow, tool or action semantics, memory writes, feedback loop, termination, and error or rollback path.
+- **Algorithm / training method**: objective or reward, inputs and outputs, each iteration or decision step, learned versus fixed parts, and inference-time behavior.
+- **Benchmark / dataset**: task contract, instance schema, source data, construction pipeline, splits, human or automatic validation, evaluator, metrics, hidden information, and contamination or leakage controls.
+- **Cost / resource method**: budget definition, accounting units, expansion or stopping rule, and what qualifies as a successful low-cost run.
+
+For complex methods, include a numbered lifecycle, a compact formula or schema when the paper gives one, and a small running example or failure case when it clarifies a branch. Place benchmark-specific validation and evaluator details in this section or directly beside it, not only under results or limitations. Before handoff, check that a reader can answer: “what enters the method, what changes at each step, why it advances or stops, and what artifact is judged?”
 
 ### Key Figure Requirements
 
