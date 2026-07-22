@@ -67,6 +67,12 @@ Use Obsidian Flavored Markdown in project maps:
 
 Use wikilink aliases for readable titles. Use inline block embeds for concise paper summaries directly on the same bullet as the paper link. In `主题聚合`, every paper bullet must include `![[...#^summary]]`; summary embeds are not optional there. Rely on backlinks so a paper note can reveal which projects, research questions, or decisions cite it. Prefer the stable summary block id `^summary` instead of embedding the whole summary heading section; the file path already identifies the paper, so paper-specific block ids are unnecessary. Do not copy `paper.md` or duplicate long single-paper analysis into project maps.
 
+### Mermaid 流程图
+
+当论文机制、实验协议或智能体生命周期需要流程图时，优先使用 `stateDiagram-v2` 描述多数以状态和事件迁移为主的场景，例如任务生命周期、执行状态、重试、通知与会话恢复。只有图的重点是静态拓扑、并行分叉或组件连接，而不是状态变化时，才使用 `flowchart`。
+
+除 Mermaid 语法关键字及必须保留的代码、协议或专有标识外，图中的状态名称、迁移说明和注释必须使用用户的工作语言；中文笔记默认全部使用中文。
+
 ## Script
 
 Use `scripts/ingest_papers.py` for deterministic fetching and conversion. Resolve the script from the installed or loaded `paper-md-ingest` skill directory; do not assume any fixed install root.
@@ -202,11 +208,68 @@ The body must use the user's working language, inferred from the request and man
 
 哪些场景没有覆盖？关键假设是什么？可能有什么偏差、风险或后续待验证点？
 
+## 概念注释
+
+在术语首次出现处用脚注补充理解正文所必需的概念，例如 `DeBERTa[^deberta]`。这里集中放置简短定义：
+
+[^deberta]: **DeBERTa**：一种 encoder-only 预训练语言模型；继续说明它在本文方法中的具体职责。
+
 ```
 
 `## 与当前项目的关系` 是可选章节。只有 manifest 提供非空 `relevance`，且该关系来自请求中指定的项目时才写入；没有项目上下文时不要留下空标题、`TODO` 或泛泛的关联判断。
 
 Keep the three-sentence summary section short and stable. End the last summary line with the fixed block id `^summary` so project maps can embed only the summary content via `![[...#^summary]]`. Use the expanded sections for single-paper reading and future agent handoff. If the paper has not been deeply read yet, write a conservative initial note and mark uncertain details in the user's working language rather than overclaiming.
+
+### Terminology Footnotes
+
+Use Obsidian-compatible Markdown footnotes to explain specialized terms that a technically capable reader may still need in order to follow the paper. Add the marker at the term's first meaningful occurrence and collect definitions under `## 概念注释` / `## Terminology Notes` near the end of the reading note.
+
+- Explain both **what the term means** and **what role it plays in this paper**; prefer one or two sentences over a dictionary-style definition.
+- Prioritize model families, algorithms, datasets, evaluation protocols, file formats, losses, and paper-specific jargon that materially affect the method or experiment.
+- Do not annotate common terms, repeat the same definition, or overload every paragraph with footnotes. The goal is to preserve reading flow while removing likely comprehension blockers.
+- Use stable, descriptive lowercase ids such as `[^deberta]`, `[^cross-encoder]`, or `[^teacher-forcing]`. Ensure every marker has exactly one definition and every definition is referenced.
+- Keep equations in Obsidian-compatible dollar delimiters. Footnotes remove terminology blockers; use the callout rules below for equations or mechanisms that require structured expansion.
+
+Example:
+
+```markdown
+候选生成器使用 DeBERTa[^deberta] 对页面元素排序，再将 top-k 元素交给动作预测模型。
+
+## 概念注释
+
+[^deberta]: **DeBERTa**：微软提出的 encoder-only 预训练语言模型。本文将它用作高效元素排序器，而不是让它直接生成完整动作。
+```
+
+### Formula and Complex-Concept Callouts
+
+Use an Obsidian-native `NOTE` callout immediately after a formula, special method, or complex concept when the explanation cannot fit in a one- or two-sentence terminology footnote. This requirement applies throughout the reading note, especially in `核心方法`, `实验与结果`, and any user-requested explanatory additions.
+
+- Use `> [!NOTE] 公式解释` for a short explanation that should remain visible. Use `> [!NOTE]+ 公式解释` only when the block should be collapsible but initially expanded.
+- Use `> [!NOTE]- 公式解释` for a content-heavy explanation that should be collapsed by default. Use equally literal titles such as `方法展开` or `概念展开` when the content is not an equation.
+- Keep the surrounding paragraph understandable while the callout is collapsed: state the formula or method's basic purpose in the main narrative, then put the detailed unpacking in the callout.
+- Explain a formula in plain language before enumerating symbols. Define every non-obvious parameter, variable, index, operator, normalization term, and constraint; state where each value comes from and whether it is fixed, observed, or learned when that distinction matters.
+- Explain the overall relationship, not only the symbol table: identify the optimized or computed quantity, how the terms interact, which quantities increase or decrease together, and the trade-off, normalization, constraint, or stopping condition expressed by the equation.
+- For a special method or concept, state its input or precondition, main transformation or decision steps, output or state change, and role in the paper's end-to-end method. Add a small example or boundary case when it clarifies a branch.
+- Preserve the paper's notation and qualify any interpretation not stated by the source. A callout expands the local reading path; it does not justify inventing a derivation or replacing a dedicated note when the background is independently reusable.
+
+Example:
+
+```markdown
+$$
+\pi^*(y\mid x)=\frac{1}{Z(x)}\pi_{\mathrm{ref}}(y\mid x)
+\exp\left(\frac{r(x,y)}{\beta}\right)
+$$
+
+> [!NOTE]- 公式解释
+> 这是最大化“奖励减去 KL 惩罚”后得到的最优策略形式。它可以读成：先沿用参考策略对输出 $y$ 的偏好，再按奖励做指数加权，最后归一化为概率分布。
+>
+> - $x$ 是输入，$y$ 是候选输出；$\pi^*(y\mid x)$ 是优化后的策略概率。
+> - $\pi_{\mathrm{ref}}(y\mid x)$ 是固定的参考策略，$r(x,y)$ 是输出获得的奖励。
+> - KL 惩罚衡量整个策略分布偏离参考策略的程度；在这个闭式解中，它通过 $\pi_{\mathrm{ref}}$ 与 $\beta$ 共同体现。
+> - $\beta>0$ 控制偏离参考策略的成本；$\beta$ 越大，奖励带来的重加权越弱，策略越接近参考策略。
+> - $Z(x)$ 是对所有候选输出求和得到的归一化项，保证最终概率之和为 1。
+> - 整体关系是：奖励越高的输出概率会指数上升，但参考策略和 $\beta$ 共同限制策略偏移的幅度。
+```
 
 ### Core Method: blocking completeness requirement
 
@@ -221,7 +284,7 @@ Cover the applicable items below. Omit only items the paper truly does not defin
 - **Benchmark / dataset**: task contract, instance schema, source data, construction pipeline, splits, human or automatic validation, evaluator, metrics, hidden information, and contamination or leakage controls.
 - **Cost / resource method**: budget definition, accounting units, expansion or stopping rule, and what qualifies as a successful low-cost run.
 
-For complex methods, include a numbered lifecycle, a compact formula or schema when the paper gives one, and a small running example or failure case when it clarifies a branch. Place benchmark-specific validation and evaluator details in this section or directly beside it, not only under results or limitations. Before handoff, check that a reader can answer: “what enters the method, what changes at each step, why it advances or stops, and what artifact is judged?”
+For complex methods, include a numbered lifecycle, a compact formula or schema when the paper gives one, and a small running example or failure case when it clarifies a branch. Apply the formula-callout requirement whenever the equation carries part of the method: reproducing the equation without explaining its parameters and overall relationship is incomplete. Place benchmark-specific validation and evaluator details in this section or directly beside it, not only under results or limitations. Before handoff, check that a reader can answer: “what enters the method, what changes at each step, why it advances or stops, and what artifact is judged?”
 
 ### Key Figure Requirements
 
